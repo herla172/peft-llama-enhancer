@@ -106,3 +106,29 @@ def main():
 
     print("Setup Data")
     training_args.remove_unused_columns = False
+    dataset = datasets.load_from_disk(finetune_args.dataset_path)
+
+    print("Setup Model")
+    model = create_model(
+        model_name=finetune_args.model_name,
+        peft_config=peft_config,
+        hf_path=finetune_args.hf_path,
+        use_8bit=finetune_args.use_8bit,
+    )
+    set_peft_requires_grad(model)
+    if finetune_args.use_8bit:
+        model.lm_head = CastOutputToFloat(model.lm_head)
+    if training_args.gradient_checkpointing:
+        print("Enabling gradient checkpointing")
+        model.gradient_checkpointing_enable()
+        model.enable_input_require_grads()
+
+    print("Train")
+    trainer = ModifiedTrainer(
+        model=model,
+        train_dataset=dataset,
+        args=training_args,
+        data_collator=data_collator
+    )
+    trainer.train()
+    save_tunable_parameters(model, os.path.join(training_args.output_dir, "params.p"))

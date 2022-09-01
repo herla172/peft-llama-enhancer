@@ -83,3 +83,26 @@ class ModifiedTrainer(Trainer):
 
 
 def data_collator(features: list) -> dict:
+    return {
+        "input_ids": torch.stack([torch.LongTensor(f["input_ids"]) for f in features]),
+    }
+
+
+def save_tunable_parameters(model, path):
+    saved_params = {
+        k: v.to("cpu")
+        for k, v in model.named_parameters()
+        if v.requires_grad
+    }
+    torch.save(saved_params, path)
+
+
+def main():
+    finetune_args, peft_config, training_args = HfArgumentParser((
+        FinetuneArguments,
+        PeftConfig,
+        TrainingArguments,
+    )).parse_args_into_dataclasses()
+
+    print("Setup Data")
+    training_args.remove_unused_columns = False

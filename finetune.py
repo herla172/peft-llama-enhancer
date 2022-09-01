@@ -44,3 +44,20 @@ def only_tunable_params(model):
 
 
 class ModifiedTrainer(Trainer):
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        batch_size = inputs["input_ids"].shape[0]
+
+        labels = inputs["input_ids"]
+        input_ids = torch.cat([
+            torch.ones(batch_size, 1).long().to(labels.device),
+            inputs["input_ids"][:, :-1],
+        ], dim=1)
+
+        # logits will be 1 block shorter than input_ids, since we're dropping off the first block
+        logits = model(input_ids=input_ids)
+
+        loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
+        loss = loss_fct(logits.reshape(
+            -1, logits.size(-1)), labels.reshape(-1)
+        )

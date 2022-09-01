@@ -61,3 +61,25 @@ class ModifiedTrainer(Trainer):
         loss = loss_fct(logits.reshape(
             -1, logits.size(-1)), labels.reshape(-1)
         )
+        if return_outputs:
+            return loss, logits
+        else:
+            return loss
+
+    def _save(self, output_dir: Optional[str] = None, state_dict=None):
+        # If we are executing this function, we are the process zero, so we don't check for that.
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        torch.save(
+            only_tunable_params(self.model),
+            os.path.join(output_dir, f"checkpoint.p"),
+        )
+
+        # Good practice: save your training arguments together with the trained model
+        torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+    def _final_ops_before_train(self):
+        pass
+
+
+def data_collator(features: list) -> dict:

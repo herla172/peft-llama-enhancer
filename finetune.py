@@ -132,3 +132,7 @@ def main():
     )
     trainer.train()
     save_tunable_parameters(model, os.path.join(training_args.output_dir, "params.p"))
+
+
+if __name__ == "__main__":
+    main()

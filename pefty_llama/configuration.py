@@ -25,3 +25,19 @@ class LLaMAConfig:
     def to_dict(self):
         return dataclasses.asdict(self)
 
+
+LLAMA_7B_CONFIG = LLaMAConfig(
+    dim=4096,
+    n_layers=32,
+    n_heads=32,
+)
+DEBUG_CONFIG = LLaMAConfig(
+    dim=64,
+    n_layers=3,
+    n_heads=4,
+)
+
+LLAMA_CONFIG_DICT = {
+    "7b": LLAMA_7B_CONFIG,
+    "debug": DEBUG_CONFIG,
+}

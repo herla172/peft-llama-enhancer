@@ -79,3 +79,29 @@ class LLaMAModel(nn.Module):
         model = cls(config)
 
         # Load weights from huggingface model to the disk if needed
+        if os.path.isdir(model_name_or_path):
+            hf_model_path = model_name_or_path
+        else:
+            hf_model_path = hf_config.cache_dir
+            hf_model = HF_LLaMA.from_pretrained(hf_model_path, config=hf_config)
+            hf_model.save_pretrained(hf_model_path)
+
+        return model
+
+    def forward(self,
+                input_ids):
+        """Forward pass (with full decode sequence, intended for training or loss-scoring)
+
+        :param input_ids: [batch_size, seq_len]
+        :return: logits [batch_size, seq_len]
+        """
+        # 1) Create masks
+        # decoder mask
+        # [batch_size, num_heads=1, q_len=seq_len, kv_len=seq_len]
+        attention_mask = create_attention_mask(input_ids=input_ids, dtype=self.config.dtype)
+        rope_embed_ids = create_rope_embed_ids(input_ids=input_ids)
+        cos, sin = self.get_cos_sin(rope_embed_ids)
+
+        # 2) Forward pass
+        # [batch_size, seq_len, hidden_dim]
+        model_out = self.model(

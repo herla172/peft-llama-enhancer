@@ -52,3 +52,30 @@ LLAMA_CONFIG_DICT = {
 
 class LLaMAModel(nn.Module):
     def __init__(self, config: LLaMAConfig):
+        super().__init__()
+        self.config = config
+        self.model = LLaMAInnerModel(config)
+        self.lm_head = NoInitLinear(config.dim, config.vocab_size, bias=False, dtype=config.dtype)
+
+    @classmethod
+    def from_pretrained(cls, model_name_or_path, use_8bit=False):
+        """Load model from a huggingface model name or path."""
+        hf_config = HF_LlamaConfig.from_pretrained(model_name_or_path)
+
+        config = LLaMAConfig(
+            vocab_size=hf_config.vocab_size,
+            dim=hf_config.hidden_size,
+            n_layers=hf_config.num_hidden_layers,
+            n_heads=hf_config.num_attention_heads,
+            max_seq_length=hf_config.max_position_embeddings,
+            dtype=hf_config.dtype,
+            pad_token_id=hf_config.pad_token_id,
+            bos_token_id=hf_config.bos_token_id,
+            eos_token_id=hf_config.eos_token_id,
+            use_8bit=use_8bit,
+        )
+
+        raise NotImplementedError()
+        model = cls(config)
+
+        # Load weights from huggingface model to the disk if needed

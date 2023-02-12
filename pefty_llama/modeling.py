@@ -278,3 +278,20 @@ class LLaMAInnerModel(nn.Module):
             if kv_cache:
                 # dict(
                 #   key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+                #   value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+                # )
+                layer_kv_cache = kv_cache[layer_i]
+            else:
+                layer_kv_cache = None
+
+            layer_out = layer(
+                hidden_states=hidden_states,
+                attention_mask=attention_mask,
+                kv_cache=layer_kv_cache,
+                cos=cos, sin=sin,
+            )
+            hidden_states = layer_out["hidden_states"]
+            if kv_cache:
+                new_kv_cache.append(layer_out["kv_cache"])
+        hidden_states = self.norm(hidden_states)
+        output = {

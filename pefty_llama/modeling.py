@@ -329,3 +329,21 @@ class LLaMALayer(nn.Module):
         #   )
         # )
         check_nan(normed_hidden_states)
+        raw_self_attn_output = self.self_attn(
+            hidden_states=normed_hidden_states,
+            attention_mask=attention_mask,
+            kv_cache=kv_cache,
+            cos=cos, sin=sin,
+        )
+        # [batch_size, seq_len, hidden_dim]
+        hidden_states = hidden_states + raw_self_attn_output["attn_output"]
+        check_nan(hidden_states)
+        # 2) FFN
+        # [batch_size, seq_len, hidden_dim]
+        hidden_states = hidden_states + self.mlp(self.post_attention_layernorm(hidden_states))
+        check_nan(hidden_states)
+        if kv_cache:
+            return {
+                "hidden_states": hidden_states,
+                "kv_cache": raw_self_attn_output["kv_cache"],
+            }

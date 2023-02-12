@@ -248,3 +248,33 @@ class LLaMAModel(nn.Module):
 
 
 class LLaMAInnerModel(nn.Module):
+    def __init__(self, config: LLaMAConfig):
+        super().__init__()
+        self.config = config
+        self.embed_tokens = nn.Embedding(config.vocab_size, config.dim, dtype=config.dtype)
+        self.layers = nn.ModuleList([
+            LLaMALayer(config=config)
+            for _ in range(config.n_layers)
+        ])
+        self.norm = RMSNorm(dim=config.dim)
+
+    def forward(self,
+                input_ids,
+                attention_mask,
+                cos, sin,
+                kv_cache=None):
+        """
+        :param input_ids: [batch_size, seq_len]
+        :param attention_mask: [batch_size=1, num_heads=1, seq_len, seq_len]
+        :param kv_cache: See init_kv_cache.
+            We use the presence of kv_cache to determine if we're generating
+        :param cos:
+        :param sin:
+        """
+        hidden_states = self.embed_tokens(input_ids)
+
+        new_kv_cache = []
+        for layer_i, layer in enumerate(self.layers):
+            if kv_cache:
+                # dict(
+                #   key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]

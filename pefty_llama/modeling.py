@@ -181,3 +181,22 @@ class LLaMAModel(nn.Module):
             attention_mask=attention_mask,
             cos=cos, sin=sin,
             kv_cache=kv_cache,
+        )
+        logits = self.lm_head(model_out["hidden_states"])
+        kv_cache = model_out["kv_cache"]
+        generated_token_ids = logits.argmax(-1)[
+            torch.arange(batch_size, dtype=torch.long, device=input_ids.device),
+            num_valid_tokens-1,
+        ][:, None]
+        generated_token_ids_list.append(generated_token_ids)
+        input_ids = generated_token_ids
+
+        # 2.1 shift KV cache
+        for layer_kv_cache in kv_cache:
+            for i in range(batch_size):
+                layer_kv_cache["key"] = shift_kv_cache_right(
+                    layer_kv_cache["key"], num_valid_tokens=num_valid_tokens)
+                layer_kv_cache["value"] = shift_kv_cache_right(
+                    layer_kv_cache["value"], num_valid_tokens=num_valid_tokens)
+
+        # 3) Subsequent steps

@@ -200,3 +200,25 @@ class LLaMAModel(nn.Module):
                     layer_kv_cache["value"], num_valid_tokens=num_valid_tokens)
 
         # 3) Subsequent steps
+        for decode_step in range(generation_length-1):
+            num_valid_tokens += 1
+            total_seq_len += 1
+            # [batch_size=1, num_heads=1, q_len=1, kv_len=1]
+            attention_mask = convert_mask_to_soft_mask(create_generation_attention_mask(
+                batch_size=batch_size,
+                seq_len=total_seq_len,
+                num_valid_tokens=num_valid_tokens,
+                device=input_ids.device,
+            ), dtype=self.config.dtype)
+            # dict(
+            #   hidden_states = [batch_size, dec_seq_len=decode_step+1, hidden_dim]
+            #   kv_cache = list[dict(
+            #     key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+            #     value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+            #   )]
+            # )
+            rope_embed_ids = create_rope_embed_ids(input_ids=input_ids) + num_valid_tokens
+            cos, sin = self.get_cos_sin(rope_embed_ids)
+            model_out = self.model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,

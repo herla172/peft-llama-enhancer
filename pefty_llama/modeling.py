@@ -295,3 +295,20 @@ class LLaMAInnerModel(nn.Module):
                 new_kv_cache.append(layer_out["kv_cache"])
         hidden_states = self.norm(hidden_states)
         output = {
+            "hidden_states": hidden_states
+        }
+        if kv_cache:
+            output["kv_cache"] = new_kv_cache
+        return output
+
+
+class LLaMALayer(nn.Module):
+    def __init__(self, config: LLaMAConfig):
+        super().__init__()
+        self.config = config
+        self.self_attn = Attention(config=config)
+        self.mlp = MLP(config=config)
+        self.input_layernorm = RMSNorm(dim=config.dim, dtype=config.dtype)
+        self.post_attention_layernorm = RMSNorm(dim=config.dim, dtype=config.dtype)
+
+    def forward(

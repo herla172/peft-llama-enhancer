@@ -129,3 +129,37 @@ class LLaMAModel(nn.Module):
         kv_cache = []
         batch_size = input_ids.shape[0]
         num_heads = self.config.n_heads
+        head_dim = self.config.head_dim
+        for layer in self.model.layers:
+            device = layer.input_layernorm.weight.device
+            kv_cache.append({
+                "key": torch.zeros([batch_size, num_heads, 0, head_dim]).to(device=device, dtype=self.config.dtype),
+                "value": torch.zeros([batch_size, num_heads, 0, head_dim]).to(device=device, dtype=self.config.dtype),
+            })
+        return kv_cache
+
+    def generate(self, input_ids, generation_length: 20):
+        """Generate tokens with efficient caching of KV.
+
+        TODO: Add stopping conditions
+        TODO: Add sampling capabilities
+
+        :param input_ids: [batch_size, enc_seq_len]
+        :param generation_length: int
+        :return: [batch_size, generation_length]
+        """
+        original_input_ids = input_ids
+        batch_size, seq_len = input_ids.shape
+        # noinspection PyUnresolvedReferences
+        num_valid_tokens = (input_ids != self.config.pad_token_id).long().sum(dim=1)
+
+        # 1) Setup
+        if input_ids is None:
+            # [batch_size, dec_seq_len=1]
+            input_ids = torch.LongTensor(
+                [[self.config.pad_token_id]] * batch_size
+            ).to(self.lm_head.weights.device)
+        # See: init_kv_cache. list[dict]
+        kv_cache = self.init_kv_cache(input_ids)
+        generated_token_ids_list = [original_input_ids]
+        total_seq_len = seq_len

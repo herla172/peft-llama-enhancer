@@ -163,3 +163,21 @@ class LLaMAModel(nn.Module):
         kv_cache = self.init_kv_cache(input_ids)
         generated_token_ids_list = [original_input_ids]
         total_seq_len = seq_len
+
+        # 2) First encoding
+        # [batch_size=1, num_heads=1, q_len=1, kv_len=1]
+        attention_mask = create_attention_mask(input_ids=input_ids, dtype=self.config.dtype)
+        # dict(
+        #   hidden_states = [batch_size, dec_seq_len=decode_step+1, hidden_dim]
+        #   kv_cache = list[dict(
+        #     key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+        #     value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+        #   )]
+        # )
+        rope_embed_ids = create_rope_embed_ids(input_ids=input_ids)
+        cos, sin = self.get_cos_sin(rope_embed_ids)
+        model_out = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            cos=cos, sin=sin,
+            kv_cache=kv_cache,

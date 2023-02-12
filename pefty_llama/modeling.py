@@ -312,3 +312,20 @@ class LLaMALayer(nn.Module):
         self.post_attention_layernorm = RMSNorm(dim=config.dim, dtype=config.dtype)
 
     def forward(
+        self,
+        hidden_states,
+        attention_mask,
+        cos, sin,
+        kv_cache=None,
+    ):
+        # 1) Self-attention
+        # [batch_size, seq_len, hidden_dim]
+        normed_hidden_states = self.input_layernorm(hidden_states)
+        # dict(
+        #   attn_output = [batch_size, seq_len, hidden_dim]
+        #   kv_cache = dict(
+        #     key = [batch_size, num_heads, kv_seq_len, head_dim]
+        #     value = [batch_size, num_heads, kv_seq_len, head_dim]
+        #   )
+        # )
+        check_nan(normed_hidden_states)

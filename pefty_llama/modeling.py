@@ -381,3 +381,29 @@ class RMSNorm(torch.nn.Module):
         super().__init__()
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim, dtype=dtype))
+
+    def _norm(self, x):
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
+    def forward(self, x):
+        output = self._norm(x.float()).type_as(x)
+        return output * self.weight
+
+
+class Attention(nn.Module):
+    def __init__(self, config: LLaMAConfig):
+        super().__init__()
+        self.config = config
+        self.n_heads = config.n_heads
+        self.head_dim = config.dim // config.n_heads
+
+        if config.use_8bit:
+            self.q_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.k_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.v_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.o_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+        else:
+            self.q_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+            self.k_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+            self.v_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+            self.o_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)

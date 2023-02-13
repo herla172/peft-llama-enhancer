@@ -347,3 +347,37 @@ class LLaMALayer(nn.Module):
                 "hidden_states": hidden_states,
                 "kv_cache": raw_self_attn_output["kv_cache"],
             }
+
+        return {"hidden_states": hidden_states}
+
+
+class MLP(nn.Module):
+    def __init__(
+        self,
+        config: LLaMAConfig,
+        multiple_of: int = 256,
+    ):
+        super().__init__()
+        dim = config.dim
+        hidden_dim = 4 * dim
+        hidden_dim = int(2 * hidden_dim / 3)
+        hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
+
+        if config.use_8bit:
+            self.gate_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.up_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.down_proj = NoInit8bitLinear(hidden_dim, dim, bias=False, threshold=6.0, has_fp16_weights=False)
+        else:
+            self.gate_proj = NoInitLinear(dim, hidden_dim, bias=False, dtype=config.dtype)
+            self.up_proj = NoInitLinear(dim, hidden_dim, bias=False, dtype=config.dtype)
+            self.down_proj = NoInitLinear(hidden_dim, dim, bias=False, dtype=config.dtype)
+
+    def forward(self, x):
+        return self.down_proj(F.silu(self.gate_proj(x)) * self.up_proj(x))
+
+
+class RMSNorm(torch.nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-6, dtype=torch.float16):
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim, dtype=dtype))

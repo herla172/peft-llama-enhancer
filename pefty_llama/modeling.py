@@ -472,3 +472,27 @@ class RotaryEmbedding(torch.nn.Module):
             # Different from paper, but it uses a different permutation in order to obtain the same calculation
             emb = torch.cat((freqs, freqs), dim=-1).to(x.device)
             self.cos_cached = emb.cos()[None, None, :, :].to(dtype=x.dtype)
+            self.sin_cached = emb.sin()[None, None, :, :].to(dtype=x.dtype)
+        return (
+            self.cos_cached[:, :, :seq_len, ...].to(dtype=x.dtype, device=x.device),
+            self.sin_cached[:, :, :seq_len, ...].to(dtype=x.dtype, device=x.device),
+        )
+
+
+def rotate_half(x):
+    """Rotates half the hidden dims of the input."""
+    x1 = x[..., : x.shape[-1] // 2]
+    x2 = x[..., x.shape[-1] // 2:]
+    return torch.cat((-x2, x1), dim=-1)
+
+
+def apply_rotary_pos_emb(q, k, cos, sin):
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+    k_embed = (k * cos) + (rotate_half(k) * sin)
+    return q_embed, k_embed
+
+
+def create_attention_mask(input_ids,
+                          dtype=torch.float32,
+                          return_soft_mask=True):
+    """Create mask for decoder attention.

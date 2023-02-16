@@ -526,3 +526,28 @@ def create_attention_mask(input_ids,
         return convert_mask_to_soft_mask(causal_mask, dtype=dtype)
     else:
         return causal_mask
+
+
+def convert_mask_to_soft_mask(mask, dtype):
+    """Convert binary mask to mask that can be added to logits.
+
+    (i.e. 0 for attention, large negative for masked)
+    """
+    mask = mask.to(dtype=dtype)
+    mask = (1.0 - mask) * torch.finfo(dtype).min
+    return mask
+
+
+class NoInitLinear(nn.Linear):
+    def reset_parameters(self) -> None:
+        pass
+
+
+class NoInit8bitLinear(bnb.nn.Linear8bitLt):
+    def reset_parameters(self) -> None:
+        pass
+
+
+def get_linear_class(use_8bit=False):
+    if use_8bit:
+        return NoInit8bitLinear

@@ -551,3 +551,20 @@ class NoInit8bitLinear(bnb.nn.Linear8bitLt):
 def get_linear_class(use_8bit=False):
     if use_8bit:
         return NoInit8bitLinear
+    else:
+        return NoInitLinear
+
+
+class NoInitEmbedding(nn.Embedding):
+    def reset_parameters(self) -> None:
+        pass
+
+
+def check_nan(x):
+    if torch.isnan(x).any():
+        import pdb
+        pdb.set_trace()
+
+
+def create_model(model_name, hf_path, use_8bit=False, device=None):
+    config = LLAMA_CONFIG_DICT[model_name]

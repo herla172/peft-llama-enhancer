@@ -591,3 +591,29 @@ def create_model(model_name, hf_path, use_8bit=False, device=None):
     else:
         # noinspection PyUnresolvedReferences
         torch.set_default_tensor_type(torch.cuda.HalfTensor)
+        model = LLaMAModel(config=config).cuda()
+        torch.set_default_tensor_type(torch.FloatTensor)
+        state_keys = set(model.state_dict())
+        for filename in tqdm.tqdm(filename_list):
+            loaded = torch.load(os.path.join(hf_path, filename), map_location="cpu")
+            model.load_state_dict(loaded, strict=False)
+            for k in loaded:
+                state_keys.remove(k)
+    return model
+
+
+def shift_kv_cache_right(layer_cache, num_valid_tokens):
+    """
+    :param layer_cache: left-aligned kv cache element, [batch_size, num_heads, seq_len, dim]
+    :param num_valid_tokens: [batch_size]
+    :return:
+    """
+    batch_size = layer_cache.shape[0]
+    # noinspection PyUnresolvedReferences
+    return torch.stack([
+        torch.cat([
+            layer_cache[i, :, num_valid_tokens[i]:, :],
+            layer_cache[i, :, :num_valid_tokens[i], :],
+        ], dim=1)
+        for i in range(batch_size)
+    ], dim=0)

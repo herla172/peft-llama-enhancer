@@ -617,3 +617,19 @@ def shift_kv_cache_right(layer_cache, num_valid_tokens):
         ], dim=1)
         for i in range(batch_size)
     ], dim=0)
+
+
+def create_generation_attention_mask(batch_size, seq_len, num_valid_tokens, device):
+    """
+    :param batch_size: int
+    :param seq_len: int
+    :param num_valid_tokens: [batch_size]
+    :param device:
+    :return:
+    """
+    # For right-aligned, based on num_valid_tokens
+    # noinspection PyTypeChecker
+    attn_mask = torch.zeros([batch_size, 1, 1, seq_len], dtype=bool)
+    for i in range(batch_size):
+        valid = num_valid_tokens[i]
+        # noinspection PyTypeChecker

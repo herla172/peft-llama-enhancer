@@ -102,3 +102,26 @@ class LLaMAModel(nn.Module):
         batch_size = input_ids.shape[0]
         num_heads = self.config.n_heads
         head_dim = self.config.head_dim
+        for layer in self.model.layers:
+            device = layer.input_layernorm.weight.device
+            kv_cache.append({
+                "key": torch.zeros([batch_size, num_heads, 0, head_dim]).to(device=device, dtype=self.config.dtype),
+                "value": torch.zeros([batch_size, num_heads, 0, head_dim]).to(device=device, dtype=self.config.dtype),
+            })
+        return kv_cache
+
+    def generate(self, input_ids, generation_length: int = 20,
+                 return_output_only=True):
+        """Generate tokens with efficient caching of KV.
+
+        TODO: Add stopping conditions
+        TODO: Add sampling capabilities
+
+        :param input_ids: [batch_size, enc_seq_len]
+        :param generation_length: int
+        :param return_output_only:
+        :return: [batch_size, generation_length]
+        """
+        original_input_ids = input_ids
+        batch_size, seq_len = input_ids.shape
+        # noinspection PyUnresolvedReferences

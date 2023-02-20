@@ -125,3 +125,31 @@ class LLaMAModel(nn.Module):
         original_input_ids = input_ids
         batch_size, seq_len = input_ids.shape
         # noinspection PyUnresolvedReferences
+        num_valid_tokens = (input_ids != self.config.pad_token_id).long().sum(dim=1)
+
+        # 1) Setup
+        if input_ids is None:
+            # [batch_size, dec_seq_len=1]
+            input_ids = torch.LongTensor(
+                [[self.config.pad_token_id]] * batch_size
+            ).to(self.lm_head.weights.device)
+        # See: init_kv_cache. list[dict]
+        if self.peft_config.peft_mode == peft.PEFT_PREFIX:
+            kv_cache = self.peft_prefixes(batch_size=input_ids.shape[0])
+            num_valid_kv_cache = num_valid_tokens + self.peft_config.num_prefix_tokens
+        else:
+            kv_cache = self.init_kv_cache(input_ids)
+            num_valid_kv_cache = num_valid_tokens
+        generated_token_ids_list = [original_input_ids]
+        total_seq_len = seq_len
+
+        # 2) First encoding
+        # [batch_size=1, num_heads=1, q_len=1, kv_len=1]
+        attention_mask = create_attention_mask(input_ids=input_ids, dtype=self.config.dtype)
+        input_ids_for_rope = input_ids
+        # dict(
+        #   hidden_states = [batch_size, dec_seq_len=decode_step+1, hidden_dim]
+        #   kv_cache = list[dict(
+        #     key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+        #     value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+        #   )]

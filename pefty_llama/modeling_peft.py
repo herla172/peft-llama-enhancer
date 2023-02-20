@@ -32,3 +32,27 @@ class LLaMAModel(nn.Module):
         self.lm_head = NoInitLinear(config.dim, config.vocab_size, bias=False, dtype=config.dtype)
 
         if self.peft_config.peft_mode == peft.PEFT_PREFIX:
+            self.peft_prefixes = peft.SoftPrefixes(config=config, peft_config=peft_config)
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_embedding:
+            self.peft_lora_lm_head = peft.LoRA(config=config, peft_config=peft_config,
+                                               output_dim=config.vocab_size)
+
+    def forward(self,
+                input_ids):
+        """Forward pass (with full decode sequence, intended for training or loss-scoring)
+
+        :param input_ids: [batch_size, seq_len]
+        :return: logits [batch_size, seq_len]
+        """
+        # 1) Create masks
+        # decoder mask
+        # [batch_size, num_heads=1, q_len=seq_len, kv_len=seq_len]
+        attention_mask = create_attention_mask(input_ids=input_ids, dtype=self.config.dtype)
+        input_ids_for_rope = input_ids
+        if self.peft_config.peft_mode == peft.PEFT_PREFIX:
+            attention_mask = torch.cat([
+                zeros_like([1, 1, input_ids.shape[1], self.peft_config.num_prefix_tokens], tensor=attention_mask),
+                attention_mask,
+            ], dim=3)
+
+        if self.peft_config.peft_mode in peft.PEFT_PROMPT:

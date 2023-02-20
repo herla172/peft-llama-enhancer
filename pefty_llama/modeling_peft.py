@@ -56,3 +56,29 @@ class LLaMAModel(nn.Module):
             ], dim=3)
 
         if self.peft_config.peft_mode in peft.PEFT_PROMPT:
+            input_ids_for_rope = torch.cat([
+                torch.ones([input_ids.shape[0], self.peft_config.num_prefix_tokens],
+                           dtype=input_ids.dtype, device=input_ids.device),
+                input_ids,
+            ], dim=1)
+            # Easier to just remake the attention mask
+            attention_mask = create_attention_mask(input_ids=input_ids_for_rope, dtype=self.config.dtype)
+        rope_embed_ids = create_rope_embed_ids(input_ids=input_ids_for_rope)
+        cos, sin = self.get_cos_sin(rope_embed_ids)
+
+        if self.peft_config.peft_mode == peft.PEFT_PREFIX:
+            kv_cache = self.peft_prefixes(batch_size=input_ids.shape[0])
+        else:
+            kv_cache = None
+
+        # 2) Forward pass
+        # [batch_size, seq_len, hidden_dim]
+        model_out = self.model(
+            input_ids,
+            attention_mask=attention_mask,
+            cos=cos, sin=sin,
+            kv_cache=kv_cache,
+        )
+        # [batch_size, seq_len, vocab_size]
+        logits = self.lm_head(model_out["hidden_states"])
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_embedding:

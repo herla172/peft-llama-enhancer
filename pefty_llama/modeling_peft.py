@@ -153,3 +153,32 @@ class LLaMAModel(nn.Module):
         #     key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
         #     value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
         #   )]
+        # )
+        if self.peft_config.peft_mode in (peft.PEFT_PREFIX, peft.PEFT_PROMPT):
+            num_prefix_tokens = self.peft_config.num_prefix_tokens
+            total_seq_len += num_prefix_tokens
+            # [batch_size, num_heads=1, q_len=seq_len, kv_len=num_prefix_tokens + dec_seq_len]
+            attention_mask = torch.cat([
+                zeros_like([1, 1, input_ids.shape[1], num_prefix_tokens], tensor=attention_mask),
+                attention_mask,
+            ], dim=3)
+
+        if self.peft_config.peft_mode in peft.PEFT_PROMPT:
+            input_ids_for_rope = torch.cat([
+                torch.ones([input_ids.shape[0], self.peft_config.num_prefix_tokens],
+                           dtype=input_ids.dtype, device=input_ids.device),
+                input_ids,
+            ], dim=1)
+            # Easier to just remake the attention mask
+            attention_mask = create_attention_mask(input_ids=input_ids_for_rope, dtype=self.config.dtype)
+        rope_embed_ids = create_rope_embed_ids(input_ids=input_ids_for_rope)
+        cos, sin = self.get_cos_sin(rope_embed_ids)
+        model_out = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            cos=cos, sin=sin,
+            kv_cache=kv_cache,
+        )
+        logits = self.lm_head(model_out["hidden_states"])
+        kv_cache = model_out["kv_cache"]
+        generated_token_ids = logits.argmax(-1)[

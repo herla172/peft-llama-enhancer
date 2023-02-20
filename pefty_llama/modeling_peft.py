@@ -82,3 +82,23 @@ class LLaMAModel(nn.Module):
         # [batch_size, seq_len, vocab_size]
         logits = self.lm_head(model_out["hidden_states"])
         if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_embedding:
+            logits += self.peft_lora_lm_head(model_out["hidden_states"])
+        return logits
+
+    def init_kv_cache(self, input_ids):
+        # noinspection GrazieInspection
+        """Initialize KV cache for decoding.
+
+        A KV cache consists of a list of dicts (one per layer):
+            dict(
+              key = [batch_size, num_heads, kv_seq_len=0, head_dim]
+              value = [batch_size, num_heads, kv_seq_len=0, head_dim]
+            )
+
+        :param input_ids: [batch_size, dec_seq_len]
+        :return: 0-length kv_cache
+        """
+        kv_cache = []
+        batch_size = input_ids.shape[0]
+        num_heads = self.config.n_heads
+        head_dim = self.config.head_dim

@@ -199,3 +199,21 @@ class LLaMAModel(nn.Module):
                 num_valid_tokens=num_valid_tokens,
                 device=input_ids.device,
             ), dtype=self.config.dtype)
+            # dict(
+            #   hidden_states = [batch_size, dec_seq_len=decode_step+1, hidden_dim]
+            #   kv_cache = list[dict(
+            #     key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+            #     value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+            #   )]
+            # )
+            rope_embed_ids = create_rope_embed_ids(input_ids=input_ids) + num_valid_tokens[:, None]
+            cos, sin = self.get_cos_sin(rope_embed_ids)
+            model_out = self.model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                kv_cache=kv_cache,
+                cos=cos, sin=sin,
+            )
+            # [batch_size, dec_seq_len=1, vocab_size]
+            logits = self.lm_head(model_out["hidden_states"])
+            kv_cache = model_out["kv_cache"]

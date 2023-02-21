@@ -217,3 +217,23 @@ class LLaMAModel(nn.Module):
             # [batch_size, dec_seq_len=1, vocab_size]
             logits = self.lm_head(model_out["hidden_states"])
             kv_cache = model_out["kv_cache"]
+            # [batch_size, dec_seq_len=1]
+            generated_token_ids = logits.argmax(-1)[:, -1:]
+            generated_token_ids_list.append(generated_token_ids)
+            input_ids = generated_token_ids
+        output = torch.cat(generated_token_ids_list, dim=1)
+        if return_output_only:
+            output = output[:, seq_len:]
+        return output
+
+    def get_cos_sin(self, rope_embed_ids):
+        cos = F.embedding(
+            rope_embed_ids,
+            self.model.layers[0].self_attn.rotary_emb.cos_cached[0, 0].to(rope_embed_ids.device)
+        ).to(self.config.dtype)
+        sin = F.embedding(
+            rope_embed_ids,
+            self.model.layers[0].self_attn.rotary_emb.sin_cached[0, 0].to(rope_embed_ids.device)
+        ).to(self.config.dtype)
+        cos, sin = cos[:, None, :, :], sin[:, None, :, :]
+        return cos, sin

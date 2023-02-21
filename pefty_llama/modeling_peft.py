@@ -237,3 +237,21 @@ class LLaMAModel(nn.Module):
         ).to(self.config.dtype)
         cos, sin = cos[:, None, :, :], sin[:, None, :, :]
         return cos, sin
+
+    def gradient_checkpointing_enable(self):
+        self.config.gradient_checkpointing = True
+
+    def enable_input_require_grads(self):
+        def make_inputs_require_grads(module, input, output):
+            output.requires_grad_(True)
+        self.model.embed_tokens.register_forward_hook(make_inputs_require_grads)
+
+
+class LLaMAInnerModel(nn.Module):
+    def __init__(self, config: LLaMAConfig, peft_config: peft.PeftConfig):
+        super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+        self.embed_tokens = nn.Embedding(config.vocab_size, config.dim, dtype=config.dtype)
+        self.layers = nn.ModuleList([
+            LLaMALayer(config=config, peft_config=peft_config)

@@ -182,3 +182,20 @@ class LLaMAModel(nn.Module):
         logits = self.lm_head(model_out["hidden_states"])
         kv_cache = model_out["kv_cache"]
         generated_token_ids = logits.argmax(-1)[
+            torch.arange(batch_size, dtype=torch.long, device=input_ids.device),
+            num_valid_tokens-1,
+        ][:, None]
+        generated_token_ids_list.append(generated_token_ids)
+        input_ids = generated_token_ids
+
+        # 3) Subsequent steps
+        for decode_step in range(generation_length-1):
+            num_valid_tokens += 1
+            total_seq_len += 1
+            # [batch_size=1, num_heads=1, q_len=1, kv_len=1]
+            attention_mask = convert_mask_to_soft_mask(create_generation_attention_mask(
+                batch_size=batch_size,
+                seq_len=total_seq_len,
+                num_valid_tokens=num_valid_tokens,
+                device=input_ids.device,
+            ), dtype=self.config.dtype)

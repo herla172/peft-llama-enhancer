@@ -277,3 +277,43 @@ class LLaMAInnerModel(nn.Module):
         :param sin: for RoPE
         :param kv_cache: See init_kv_cache.
         """
+        hidden_states = self.embed_tokens(input_ids).to(self.config.dtype)
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_embedding:
+            hidden_states += self.peft_lora_embed(input_ids).to(self.config.dtype)
+
+        if self.peft_config.peft_mode == peft.PEFT_PROMPT:
+            if kv_cache is None or kv_cache[0]["key"].shape[2] == 0:
+                # Only add prompt if kv_cache is None (full forward pass) or if kv_cache is empty (first decode step)
+                hidden_states = self.peft_prompt(hidden_states)
+
+        new_kv_cache = []
+        for layer_i, layer in enumerate(self.layers):
+            if kv_cache:
+                # dict(
+                #   key = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+                #   value = [batch_size, num_heads, kv_seq_len=decode_step+1, head_dim]
+                # )
+                layer_kv_cache = kv_cache[layer_i]
+            else:
+                layer_kv_cache = None
+
+            if self.config.gradient_checkpointing:
+                layer_out = torch.utils.checkpoint.checkpoint(
+                    layer,
+                    hidden_states,
+                    attention_mask,
+                    cos, sin,
+                    layer_kv_cache,
+                )
+            else:
+                layer_out = layer(
+                    hidden_states=hidden_states,
+                    attention_mask=attention_mask,
+                    cos=cos, sin=sin,
+                    kv_cache=layer_kv_cache,
+                )
+            hidden_states, out_layer_kv_cache = layer_out
+            if kv_cache:
+                new_kv_cache.append(out_layer_kv_cache)
+        hidden_states = self.norm(hidden_states)
+        output = {

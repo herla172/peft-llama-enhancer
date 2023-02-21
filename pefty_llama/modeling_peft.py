@@ -255,3 +255,25 @@ class LLaMAInnerModel(nn.Module):
         self.embed_tokens = nn.Embedding(config.vocab_size, config.dim, dtype=config.dtype)
         self.layers = nn.ModuleList([
             LLaMALayer(config=config, peft_config=peft_config)
+            for _ in range(config.n_layers)
+        ])
+        self.norm = RMSNorm(dim=config.dim)
+
+        if self.peft_config.peft_mode == peft.PEFT_PROMPT:
+            self.peft_prompt = peft.AddSoftPrompt(config=config, peft_config=peft_config)
+
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_embedding:
+            self.peft_lora_embed = peft.LoRAEmbed(config=config, peft_config=peft_config)
+
+    def forward(self,
+                input_ids,
+                attention_mask,
+                cos, sin,
+                kv_cache=None):
+        """
+        :param input_ids: [batch_size, seq_len]
+        :param attention_mask: [batch_size=1, num_heads=1, seq_len, seq_len]
+        :param cos: for RoPE
+        :param sin: for RoPE
+        :param kv_cache: See init_kv_cache.
+        """

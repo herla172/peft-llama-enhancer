@@ -317,3 +317,21 @@ class LLaMAInnerModel(nn.Module):
                 new_kv_cache.append(out_layer_kv_cache)
         hidden_states = self.norm(hidden_states)
         output = {
+            "hidden_states": hidden_states
+        }
+        if kv_cache:
+            output["kv_cache"] = new_kv_cache
+        return output
+
+
+class LLaMALayer(nn.Module):
+    def __init__(self, config: LLaMAConfig, peft_config: peft.PeftConfig):
+        super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+        self.self_attn = Attention(config=config, peft_config=peft_config)
+        self.mlp = MLP(config=config, peft_config=peft_config)
+        self.input_layernorm = RMSNorm(dim=config.dim, dtype=config.dtype)
+        self.post_attention_layernorm = RMSNorm(dim=config.dim, dtype=config.dtype)
+
+        if self.peft_config.peft_mode == peft.PEFT_ADAPTER:

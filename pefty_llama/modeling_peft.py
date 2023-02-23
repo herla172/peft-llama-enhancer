@@ -335,3 +335,26 @@ class LLaMALayer(nn.Module):
         self.post_attention_layernorm = RMSNorm(dim=config.dim, dtype=config.dtype)
 
         if self.peft_config.peft_mode == peft.PEFT_ADAPTER:
+            if self.peft_config.adapter_version == "houlsby":
+                self.peft_adapter_attn = peft.Adapter(config=config, peft_config=peft_config)
+            self.peft_adapter_mlp = peft.Adapter(config=config, peft_config=peft_config)
+
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            self.peft_input_layernorm_bias = peft.BitFitAddBias(dim=config.dim, peft_config=peft_config)
+            self.peft_post_attention_layernorm_bias = peft.BitFitAddBias(dim=config.dim, peft_config=peft_config)
+
+    def forward(
+        self,
+        hidden_states,
+        attention_mask,
+        cos, sin,
+        kv_cache=None,
+    ):
+        # 1) Self-attention
+        # [batch_size, seq_len, hidden_dim]
+        normed_hidden_states = self.input_layernorm(hidden_states).to(self.config.dtype)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            normed_hidden_states = self.peft_input_layernorm_bias(normed_hidden_states)
+        # dict(
+        #   attn_output = [batch_size, seq_len, hidden_dim]
+        #   kv_cache = dict(

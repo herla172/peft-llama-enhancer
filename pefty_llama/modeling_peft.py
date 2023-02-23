@@ -358,3 +358,19 @@ class LLaMALayer(nn.Module):
         # dict(
         #   attn_output = [batch_size, seq_len, hidden_dim]
         #   kv_cache = dict(
+        #     key = [batch_size, num_heads, kv_seq_len, head_dim]
+        #     value = [batch_size, num_heads, kv_seq_len, head_dim]
+        #   )
+        # )
+        check_nan(normed_hidden_states)
+        raw_self_attn_output = self.self_attn(
+            hidden_states=normed_hidden_states,
+            attention_mask=attention_mask,
+            kv_cache=kv_cache,
+            cos=cos, sin=sin,
+        )
+        # [batch_size, seq_len, hidden_dim]
+        attn_out = raw_self_attn_output["attn_output"]
+        if self.peft_config.peft_mode == peft.PEFT_ADAPTER \
+                and self.peft_config.adapter_version == peft.ADAPTER_VERSION_HOULSBY:
+            attn_out = self.peft_adapter_attn(attn_out)

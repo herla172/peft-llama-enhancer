@@ -374,3 +374,22 @@ class LLaMALayer(nn.Module):
         if self.peft_config.peft_mode == peft.PEFT_ADAPTER \
                 and self.peft_config.adapter_version == peft.ADAPTER_VERSION_HOULSBY:
             attn_out = self.peft_adapter_attn(attn_out)
+
+        # [batch_size, seq_len, hidden_dim]
+        hidden_states = hidden_states + attn_out
+        check_nan(hidden_states)
+        # 2) FFN
+        # [batch_size, seq_len, hidden_dim]
+        post_normed_hidden_states = self.post_attention_layernorm(hidden_states)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            post_normed_hidden_states = self.peft_post_attention_layernorm_bias(post_normed_hidden_states)
+
+        mlp_out = self.mlp(post_normed_hidden_states)
+        if self.peft_config.peft_mode == peft.PEFT_ADAPTER:
+            mlp_out = self.peft_adapter_mlp(mlp_out)
+
+        hidden_states = hidden_states + mlp_out
+        check_nan(hidden_states)
+        # if kv_cache:
+        #     return {
+        #         "hidden_states": hidden_states,

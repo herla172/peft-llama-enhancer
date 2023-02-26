@@ -522,3 +522,21 @@ class Attention(nn.Module):
         query_states = self.q_proj(hidden_states)
         key_states = self.k_proj(hidden_states)
         value_states = self.v_proj(hidden_states)
+
+        if self.peft_config.peft_mode == peft.PEFT_LORA:
+            query_states += self.peft_q_proj_lora(hidden_states)
+            value_states += self.peft_v_proj_lora(hidden_states)
+        if self.peft_config.peft_mode == peft.PEFT_IA3:
+            key_states, value_states = self.peft_ia3(key_states, value_states)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            query_states = self.peft_q_proj_bias(query_states)
+            key_states = self.peft_k_proj_bias(key_states)
+            value_states = self.peft_v_proj_bias(value_states)
+
+        query_states = query_states.view(
+            batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        key_states = key_states.view(
+            batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        value_states = value_states.view(
+            batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos=cos, sin=sin)

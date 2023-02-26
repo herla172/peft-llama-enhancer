@@ -453,3 +453,22 @@ class MLP(nn.Module):
 
         intermediate_state = F.silu(gate_proj) * up_proj
         if self.peft_config.peft_mode == peft.PEFT_IA3:
+            intermediate_state = self.peft_ia3(intermediate_state)
+
+        down_proj = self.down_proj(intermediate_state)
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_mlp:
+            down_proj = self.down_proj_lora(x)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            down_proj = self.peft_down_proj_bias(down_proj)
+
+        return down_proj
+
+
+class RMSNorm(torch.nn.Module):
+    def __init__(self, dim: int, eps: float = 1e-6, dtype=torch.float16):
+        super().__init__()
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim, dtype=dtype))
+
+    def _norm(self, x):
+        return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)

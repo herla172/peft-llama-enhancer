@@ -411,3 +411,28 @@ class MLP(nn.Module):
         multiple_of: int = 256,
     ):
         super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+        dim = config.dim
+        hidden_dim = 4 * dim
+        hidden_dim = int(2 * hidden_dim / 3)
+        hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
+
+        if config.use_8bit:
+            self.gate_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.up_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.down_proj = NoInit8bitLinear(hidden_dim, dim, bias=False, threshold=6.0, has_fp16_weights=False)
+        else:
+            self.gate_proj = NoInitLinear(dim, hidden_dim, bias=False, dtype=config.dtype)
+            self.up_proj = NoInitLinear(dim, hidden_dim, bias=False, dtype=config.dtype)
+            self.down_proj = NoInitLinear(hidden_dim, dim, bias=False, dtype=config.dtype)
+
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_mlp:
+            self.gate_proj_lora = peft.LoRA(config=config, peft_config=peft_config,
+                                            input_dim=dim, output_dim=hidden_dim)
+            self.up_proj_lora = peft.LoRA(config=config, peft_config=peft_config,
+                                          input_dim=dim, output_dim=hidden_dim)
+            self.down_proj_lora = peft.LoRA(config=config, peft_config=peft_config,
+                                            input_dim=dim, output_dim=hidden_dim)
+        if self.peft_config.peft_mode == peft.PEFT_IA3:
+            self.peft_ia3 = peft.IA3ForMLP(config, peft_config=peft_config)

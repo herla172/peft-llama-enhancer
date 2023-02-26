@@ -500,3 +500,25 @@ class Attention(nn.Module):
 
         if self.peft_config.peft_mode == peft.PEFT_LORA:
             self.peft_q_proj_lora = peft.LoRA(config=config, peft_config=peft_config)
+            self.peft_v_proj_lora = peft.LoRA(config=config, peft_config=peft_config)
+        if self.peft_config.peft_mode == peft.PEFT_IA3:
+            self.peft_ia3 = peft.IA3ForAttn(config, peft_config=peft_config)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            self.peft_q_proj_bias = peft.BitFitAddBias(dim=config.dim, peft_config=peft_config)
+            self.peft_k_proj_bias = peft.BitFitAddBias(dim=config.dim, peft_config=peft_config)
+            self.peft_v_proj_bias = peft.BitFitAddBias(dim=config.dim, peft_config=peft_config)
+            self.peft_o_proj_bias = peft.BitFitAddBias(dim=config.dim, peft_config=peft_config)
+        if self.peft_config.peft_mode == peft.PEFT_PREFIX_ADAPTER:
+            self.peft_prefix_adapter = peft.PrefixAdapter(config=config, peft_config=peft_config)
+
+    def forward(self, hidden_states, attention_mask, cos, sin, kv_cache=None):
+        """
+        precomputed_kv_hidden_states is for init (pre-compute KV activations, e.g. for added prefixes)
+        kv_cache is for generation (cached past KV)
+        """
+        batch_size, q_seq_len, hidden_dim = hidden_states.size()
+
+        # (batch_size, num_heads, q_seq_len, head_dim)
+        query_states = self.q_proj(hidden_states)
+        key_states = self.k_proj(hidden_states)
+        value_states = self.v_proj(hidden_states)

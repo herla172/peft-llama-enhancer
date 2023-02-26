@@ -436,3 +436,20 @@ class MLP(nn.Module):
                                             input_dim=dim, output_dim=hidden_dim)
         if self.peft_config.peft_mode == peft.PEFT_IA3:
             self.peft_ia3 = peft.IA3ForMLP(config, peft_config=peft_config)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            self.peft_gate_proj_bias = peft.BitFitAddBias(dim=hidden_dim, peft_config=peft_config)
+            self.peft_up_proj_bias = peft.BitFitAddBias(dim=hidden_dim, peft_config=peft_config)
+            self.peft_down_proj_bias = peft.BitFitAddBias(dim=dim, peft_config=peft_config)
+
+    def forward(self, x):
+        gate_proj = self.gate_proj(x)
+        up_proj = self.up_proj(x)
+        if self.peft_config.peft_mode == peft.PEFT_LORA and self.peft_config.lora_mlp:
+            gate_proj += self.gate_proj_lora(x)
+            up_proj += self.up_proj_lora(x)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            gate_proj = self.peft_gate_proj_bias(gate_proj)
+            up_proj = self.peft_gate_proj_bias(up_proj)
+
+        intermediate_state = F.silu(gate_proj) * up_proj
+        if self.peft_config.peft_mode == peft.PEFT_IA3:

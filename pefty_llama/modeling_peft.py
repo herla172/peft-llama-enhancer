@@ -540,3 +540,28 @@ class Attention(nn.Module):
         value_states = value_states.view(
             batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
         query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos=cos, sin=sin)
+
+        if kv_cache:
+            key_states = torch.cat([kv_cache["key"], key_states], dim=2)
+            value_states = torch.cat([kv_cache["value"], value_states], dim=2)
+
+        attn_output = torch.nn.functional.scaled_dot_product_attention(
+            query=query_states,
+            key=key_states,
+            value=value_states,
+            attn_mask=attention_mask,
+        )
+
+        if self.peft_config.peft_mode == peft.PEFT_PREFIX_ADAPTER:
+            attn_output = attn_output + self.peft_prefix_adapter(query_states=query_states)
+
+        # (batch_size, q_seq_len, hidden_dim)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(
+            batch_size, q_seq_len, hidden_dim,
+        )
+        attn_output = self.o_proj(attn_output)
+        if self.peft_config.peft_mode == peft.PEFT_BITFIT:
+            attn_output = self.peft_o_proj_bias(attn_output)
+
+        check_nan(attn_output)
+        if kv_cache:

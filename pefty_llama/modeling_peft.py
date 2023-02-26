@@ -472,3 +472,31 @@ class RMSNorm(torch.nn.Module):
 
     def _norm(self, x):
         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
+    def forward(self, x):
+        output = self._norm(x.float()).type_as(x)
+        return output * self.weight
+
+
+class Attention(nn.Module):
+    def __init__(self, config: LLaMAConfig, peft_config: peft.PeftConfig):
+        super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+        self.n_heads = config.n_heads
+        self.head_dim = config.dim // config.n_heads
+
+        if config.use_8bit:
+            self.q_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.k_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.v_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.o_proj = NoInit8bitLinear(config.dim, config.dim, bias=False, threshold=6.0, has_fp16_weights=False)
+        else:
+            self.q_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+            self.k_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+            self.v_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+            self.o_proj = NoInitLinear(config.dim, config.dim, bias=False, dtype=config.dtype)
+        self.rotary_emb = RotaryEmbedding(dim=self.head_dim)
+
+        if self.peft_config.peft_mode == peft.PEFT_LORA:
+            self.peft_q_proj_lora = peft.LoRA(config=config, peft_config=peft_config)

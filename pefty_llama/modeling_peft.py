@@ -393,3 +393,21 @@ class LLaMALayer(nn.Module):
         # if kv_cache:
         #     return {
         #         "hidden_states": hidden_states,
+        #         "kv_cache": raw_self_attn_output["kv_cache"],
+        #     }
+        #
+        # return {"hidden_states": hidden_states}
+        if kv_cache:
+            return hidden_states, raw_self_attn_output["kv_cache"]
+        else:
+            return hidden_states, None
+
+
+class MLP(nn.Module):
+    def __init__(
+        self,
+        config: LLaMAConfig,
+        peft_config: peft.PeftConfig,
+        multiple_of: int = 256,
+    ):
+        super().__init__()

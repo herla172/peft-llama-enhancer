@@ -618,3 +618,29 @@ def apply_rotary_pos_emb(q, k, cos, sin):
 
 def create_attention_mask(input_ids,
                           dtype=torch.float32,
+                          return_soft_mask=True):
+    """Create mask for decoder attention.
+
+    Decoder masks have two use-cases:
+
+    1) Training, where we see the full decoder sequence. In that case,
+       we want a causal mask.
+
+    2) Generation, where we only see one token at once. In that case,
+       it doesn't really matter what we give, we can just give a 1.
+       (i.e. seq_len = 1)
+
+    Note that in both cases we do not care about which decoder_input_ids
+    are valid, and also we can always simply broadcast over the batch size
+    and heads.
+
+    :param input_ids: [batch_size, seq_len]
+    :param dtype: dtype
+    :param return_soft_mask: whether to return mask or logits-mask
+    :return: float [batch_size=1, num_heads=1, q_len=seq_len, kv_len=seq_len]
+    """
+    batch_size, seq_length = input_ids.shape
+    # [seq_len]
+    seq_ids = torch.arange(seq_length, device=input_ids.device)
+    # [seq_len, seq_len]
+    causal_mask = seq_ids[None, :].repeat(seq_length, 1) <= seq_ids[:, None]

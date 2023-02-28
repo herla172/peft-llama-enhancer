@@ -644,3 +644,25 @@ def create_attention_mask(input_ids,
     seq_ids = torch.arange(seq_length, device=input_ids.device)
     # [seq_len, seq_len]
     causal_mask = seq_ids[None, :].repeat(seq_length, 1) <= seq_ids[:, None]
+    # [batch_size=1, num_heads=1, seq_len, seq_len]
+    causal_mask = causal_mask[None, None, :, :]
+    if return_soft_mask:
+        return convert_mask_to_soft_mask(causal_mask, dtype=dtype)
+    else:
+        return causal_mask
+
+
+def convert_mask_to_soft_mask(mask, dtype):
+    """Convert binary mask to mask that can be added to logits.
+
+    (i.e. 0 for attention, large negative for masked)
+    """
+    mask = mask.to(dtype=dtype)
+    mask = (1.0 - mask) * torch.finfo(dtype).min
+    return mask
+
+
+class NoInitLinear(nn.Linear):
+    def reset_parameters(self) -> None:
+        pass
+

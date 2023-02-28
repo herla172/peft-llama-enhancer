@@ -690,3 +690,33 @@ def check_nan(x):
     #     pdb.set_trace()
     pass
 
+
+def create_model(model_name, hf_path, peft_config: peft.PeftConfig, use_8bit=False, device=None):
+    config = LLAMA_CONFIG_DICT[model_name]
+
+    with open(os.path.join(hf_path, "pytorch_model.bin.index.json")) as f:
+        weight_map = json.load(f)["weight_map"]
+
+    filename_list = sorted(list(set(weight_map.values())))
+    if device is None:
+        # TODO: Local rank
+        device = torch.device("cuda:0")
+    if use_8bit:
+        config = dataclasses.replace(config, use_8bit=True)
+        with init_empty_weights():
+            model = LLaMAModel(config=config, peft_config=peft_config)
+        if model_name == "debug":
+            return model
+        state_keys = set(model.state_dict())
+        filename_list = sorted(list(set(weight_map.values())))
+        for filename in tqdm.tqdm(filename_list):
+            loaded = torch.load(os.path.join(hf_path, filename), map_location="cpu")
+            for k, v in loaded.items():
+                set_module_8bit_tensor_to_device(model, tensor_name=k, device=device, value=v)
+                state_keys.remove(k)
+        assert not state_keys
+    else:
+        # noinspection PyUnresolvedReferences
+        torch.set_default_tensor_type(torch.cuda.HalfTensor)
+        model = LLaMAModel(config=config, peft_config=peft_config).cuda()
+        torch.set_default_tensor_type(torch.FloatTensor)

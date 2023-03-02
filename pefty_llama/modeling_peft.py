@@ -744,3 +744,28 @@ def set_peft_requires_grad(model: LLaMAModel):
         _set_requires_grad_if_str_in_name(model, substr="peft_prefix_adapter")
     elif model.peft_config.peft_mode == peft.PEFT_LORA:
         _set_requires_grad_if_str_in_name(model, substr="_lora")
+    elif model.peft_config.peft_mode == peft.PEFT_IA3:
+        _set_requires_grad_if_str_in_name(model, substr="ia3")
+    elif model.peft_config.peft_mode == peft.PEFT_BITFIT:
+        _set_requires_grad_if_str_in_name(model, substr="bias")
+    elif model.peft_config.peft_mode == peft.NO_PEFT:
+        pass
+    else:
+        raise KeyError(model.peft_config.peft_mode)
+
+
+def _set_requires_grad_if_str_in_name(model, substr):
+    for n, p in model.named_parameters():
+        if substr in n:
+            p.requires_grad_(True)
+            print(f"Tuning: {n}")
+
+
+def create_generation_attention_mask(batch_size, seq_len, num_valid_tokens, device):
+    """
+    :param batch_size: int
+    :param seq_len: int
+    :param num_valid_tokens: [batch_size]
+    :param device:
+    :return:
+    """

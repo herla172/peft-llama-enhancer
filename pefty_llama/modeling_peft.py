@@ -720,3 +720,27 @@ def create_model(model_name, hf_path, peft_config: peft.PeftConfig, use_8bit=Fal
         torch.set_default_tensor_type(torch.cuda.HalfTensor)
         model = LLaMAModel(config=config, peft_config=peft_config).cuda()
         torch.set_default_tensor_type(torch.FloatTensor)
+        if model_name == "debug":
+            return model
+        state_keys = set(model.state_dict())
+        for filename in tqdm.tqdm(filename_list):
+            loaded = torch.load(os.path.join(hf_path, filename), map_location="cpu")
+            model.load_state_dict(loaded, strict=False)
+            for k in loaded:
+                state_keys.remove(k)
+    return model
+
+
+def set_peft_requires_grad(model: LLaMAModel):
+    for p in model.parameters():
+        p.requires_grad_(False)
+    if model.peft_config.peft_mode == peft.PEFT_PREFIX:
+        _set_requires_grad_if_str_in_name(model, substr="peft_prefix")
+    elif model.peft_config.peft_mode == peft.PEFT_PROMPT:
+        _set_requires_grad_if_str_in_name(model, substr="peft_prompt")
+    elif model.peft_config.peft_mode == peft.PEFT_ADAPTER:
+        _set_requires_grad_if_str_in_name(model, substr="peft_adapter_")
+    elif model.peft_config.peft_mode == peft.PEFT_PREFIX_ADAPTER:
+        _set_requires_grad_if_str_in_name(model, substr="peft_prefix_adapter")
+    elif model.peft_config.peft_mode == peft.PEFT_LORA:
+        _set_requires_grad_if_str_in_name(model, substr="_lora")

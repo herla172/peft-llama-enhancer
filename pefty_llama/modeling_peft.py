@@ -769,3 +769,30 @@ def create_generation_attention_mask(batch_size, seq_len, num_valid_tokens, devi
     :param device:
     :return:
     """
+    # For right-aligned, based on num_valid_tokens
+    # noinspection PyTypeChecker
+    attn_mask = torch.zeros([batch_size, 1, 1, seq_len], dtype=bool)
+    for i in range(batch_size):
+        valid = num_valid_tokens[i]
+        # noinspection PyTypeChecker
+        # attn_mask[i, 0, -valid:, -valid:] = torch.tril(torch.ones([valid, valid], dtype=bool))
+        attn_mask[i, 0, 0, -valid:] = True
+    return attn_mask.to(device=device)
+
+
+def create_casual_attention_mask(seq_len, device):
+    # noinspection PyTypeChecker
+    attn_mask = torch.tril(torch.ones([seq_len, seq_len], dtype=bool))[None, None, :, :]
+    return attn_mask.to(device=device)
+
+
+def create_rope_embed_ids(input_ids):
+    pad_token_id = 0
+    max_position = 2047  # These will not actually be used, as they are masked out by the attention mask
+    x = (input_ids != pad_token_id).cumsum(-1) - 1
+    x[input_ids == pad_token_id] = max_position
+    return x
+
+
+def zeros_like(shape, tensor):
+    return torch.zeros(shape).type_as(tensor).to(tensor.device)

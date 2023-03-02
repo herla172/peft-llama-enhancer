@@ -1,1 +1,1 @@
-f
+from .configuration import

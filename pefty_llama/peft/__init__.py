@@ -1,4 +1,4 @@
 from .configuration import *
 from .ia3 import IA3ForAttn, IA3ForMLP
 from .bitfit import BitFitAddBias
-from .lo
+from .lora import LoRA, Lo

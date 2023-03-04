@@ -5,4 +5,4 @@ from .lora import LoRA, LoRAEmbed
 from .prefix_tuning import SoftPrefixes
 from .prompt_tuning import AddSoftPrompt
 from .adapter import Adapter
-from .prefix_adapter import PrefixAd
+from .prefix_adapter import PrefixAdapter

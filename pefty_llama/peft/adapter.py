@@ -1,1 +1,2 @@
-import torch.nn a
+import torch.nn as nn
+import tor

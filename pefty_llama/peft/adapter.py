@@ -1,2 +1,2 @@
 import torch.nn as nn
-import tor
+import torch.nn.functional as 

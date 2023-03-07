@@ -4,4 +4,5 @@ from pefty_llama.configuration import LLaMAConfig
 from .configuration import PeftConfig
 
 
-class Ad
+class Adapter(nn.Module):
+  

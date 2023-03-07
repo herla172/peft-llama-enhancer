@@ -5,4 +5,4 @@ from .configuration import PeftConfig
 
 
 class Adapter(nn.Module):
-  
+    def __init__(self, config: LLaMA

@@ -9,4 +9,5 @@ class Adapter(nn.Module):
         super().__init__()
         self.config = config
         self.peft_config = peft_config
-        self.down_proj = n
+        self.down_proj = nn.Linear(
+     

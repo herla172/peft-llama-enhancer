@@ -10,4 +10,4 @@ class Adapter(nn.Module):
         self.config = config
         self.peft_config = peft_config
         self.down_proj = nn.Linear(
-            config.dim, p
+            config.dim, peft_config.adapter_hidden

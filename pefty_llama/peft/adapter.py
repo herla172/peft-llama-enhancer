@@ -15,4 +15,7 @@ class Adapter(nn.Module):
         )
         self.up_proj = nn.Linear(
             peft_config.adapter_hidden_size, config.dim, bias=False,
-            dtype=peft_config.peft_
+            dtype=peft_config.peft_dtype,
+        )
+
+    def fo

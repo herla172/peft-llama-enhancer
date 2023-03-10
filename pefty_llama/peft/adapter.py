@@ -18,4 +18,4 @@ class Adapter(nn.Module):
             dtype=peft_config.peft_dtype,
         )
 
-    def fo
+    def forward(self, hidden_sta

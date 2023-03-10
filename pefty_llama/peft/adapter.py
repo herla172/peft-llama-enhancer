@@ -18,4 +18,5 @@ class Adapter(nn.Module):
             dtype=peft_config.peft_dtype,
         )
 
-    def forward(self, hidden_sta
+    def forward(self, hidden_states):
+        hidden_states = hidde

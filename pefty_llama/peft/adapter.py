@@ -19,4 +19,4 @@ class Adapter(nn.Module):
         )
 
     def forward(self, hidden_states):
-        hidden_states = hidde
+        hidden_states = hidden_states.to(self.peft_con

@@ -20,4 +20,5 @@ class Adapter(nn.Module):
 
     def forward(self, hidden_states):
         hidden_states = hidden_states.to(self.peft_config.peft_dtype)
-        out = self.up_proj(F.gelu(self.down_proj(hidden_state
+        out = self.up_proj(F.gelu(self.down_proj(hidden_states))) + hidden_states
+   

@@ -4,4 +4,5 @@ from .configuration import PeftConfig
 
 
 class BitFitAddBias(nn.Module):
-    def __init__(self, dim: int, peft_config: 
+    def __init__(self, dim: int, peft_config: PeftConfig):
+     

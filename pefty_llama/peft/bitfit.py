@@ -7,4 +7,4 @@ class BitFitAddBias(nn.Module):
     def __init__(self, dim: int, peft_config: PeftConfig):
         super().__init__()
         self.peft_config = peft_config
-        self.bias = nn.Paramet
+        self.bias = nn.Parameter(torch.zeros(dim

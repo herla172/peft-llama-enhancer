@@ -11,4 +11,4 @@ class BitFitAddBias(nn.Module):
 
     def forward(self, hidden_state):
         input_dtype = hidden_state.dtype
-        retu
+        return (hidden_state.

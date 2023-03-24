@@ -40,3 +40,31 @@ class IA3Attention(nn.Module):
         kv_cache is for generation (cached past KV)
         """
         batch_size, q_seq_len, hidden_dim = hidden_states.size()
+
+        # (batch_size, num_heads, q_seq_len, head_dim)
+        query_states = self.q_proj(hidden_states).view(
+            batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        key_states = self.k_proj(hidden_states).view(
+            batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        value_states = self.v_proj(hidden_states).view(
+            batch_size, q_seq_len, self.n_heads, self.head_dim).transpose(1, 2)
+        query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos=cos, sin=sin)
+        if kv_cache:
+            key_states = torch.cat([kv_cache["key"], key_states], dim=2)
+            value_states = torch.cat([kv_cache["value"], value_states], dim=2)
+
+        # IA3-specific:
+        query_states = query_states * self.peft_l_k
+        value_states = value_states * self.peft_l_v
+        # end of IA3-specific
+
+        scores = torch.matmul(
+            query_states, key_states.transpose(3, 2).type_as(query_states) / math.sqrt(self.head_dim)
+        )
+        scores += attention_mask
+
+        # (batch_size, num_heads, q_seq_len, kv_seq_len)
+        attn_weights = F.softmax(scores.float(), dim=-1).type_as(scores)
+        # (batch_size, num_heads, q_seq_len, head_dim)
+        attn_output = torch.matmul(attn_weights, value_states.type_as(query_states))
+        # (batch_size, q_seq_len, hidden_dim)

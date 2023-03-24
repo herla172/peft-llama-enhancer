@@ -68,3 +68,29 @@ class IA3Attention(nn.Module):
         # (batch_size, num_heads, q_seq_len, head_dim)
         attn_output = torch.matmul(attn_weights, value_states.type_as(query_states))
         # (batch_size, q_seq_len, hidden_dim)
+        attn_output = attn_output.transpose(1, 2).contiguous().view(
+            batch_size, q_seq_len, hidden_dim,
+        )
+        attn_output = self.o_proj(attn_output)
+        check_nan(attn_output)
+        if kv_cache:
+            new_kv_cache = {"key": key_states, "value": value_states}
+            return {"attn_output": attn_output, "kv_cache": new_kv_cache}
+        else:
+            return {"attn_output": attn_output}
+
+
+class IA3MLP(nn.Module):
+    def __init__(
+        self,
+        config: LLaMAConfig,
+        multiple_of: int = 256,
+    ):
+        super().__init__()
+        dim = config.dim
+        hidden_dim = 4 * dim
+        hidden_dim = int(2 * hidden_dim / 3)
+        hidden_dim = multiple_of * ((hidden_dim + multiple_of - 1) // multiple_of)
+
+        if config.use_8bit:
+            self.gate_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)

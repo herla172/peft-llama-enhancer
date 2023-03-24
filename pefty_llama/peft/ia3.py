@@ -94,3 +94,26 @@ class IA3MLP(nn.Module):
 
         if config.use_8bit:
             self.gate_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.up_proj = NoInit8bitLinear(dim, hidden_dim, bias=False, threshold=6.0, has_fp16_weights=False)
+            self.down_proj = NoInit8bitLinear(hidden_dim, dim, bias=False, threshold=6.0, has_fp16_weights=False)
+        else:
+            self.gate_proj = NoInitLinear(dim, hidden_dim, bias=False, dtype=config.dtype)
+            self.up_proj = NoInitLinear(dim, hidden_dim, bias=False, dtype=config.dtype)
+            self.down_proj = NoInitLinear(hidden_dim, dim, bias=False, dtype=config.dtype)
+
+        # IA3-specific parameters:
+        self.peft_l_ffn = nn.Parameter(torch.ones(1, 1, hidden_dim, dtype=config.dtype))
+
+    def forward(self, x):
+        h = F.silu(self.gate_proj(x)) * self.up_proj(x)
+        # IA3-specific:
+        h = h * self.peft_l_ffn
+        # end of IA3-specific
+        return self.down_proj(h)
+
+
+class IA3(nn.Module):
+    def __init__(self, model: LLaMAModel):
+        super().__init__()
+        self.base_model = model
+        model_config = model.config

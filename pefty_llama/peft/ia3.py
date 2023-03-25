@@ -117,3 +117,29 @@ class IA3(nn.Module):
         super().__init__()
         self.base_model = model
         model_config = model.config
+
+        for layer in self.base_model.model.layers:
+            # you also need to copy the parameters of the layer to the new layer
+            patched_attn = IA3Attention(model_config)
+            current_attn = layer.self_attn
+            patched_attn.q_proj.weight = current_attn.q_proj.weight
+            patched_attn.k_proj.weight = current_attn.k_proj.weight
+            patched_attn.v_proj.weight = current_attn.v_proj.weight
+            patched_attn.o_proj.weight = current_attn.o_proj.weight
+            patched_attn.rotary_emb = current_attn.rotary_emb
+
+            layer.self_attn = patched_attn
+            del current_attn
+
+            patched_mlp = IA3MLP(model_config)
+            current_mlp = layer.mlp
+            patched_mlp.gate_proj.weight = current_mlp.gate_proj.weight
+            patched_mlp.up_proj.weight = current_mlp.up_proj.weight
+            patched_mlp.down_proj.weight = current_mlp.down_proj.weight
+            
+            layer.mlp = patched_mlp
+            del current_mlp
+
+        # cleanup memory freed by deleting the old layers
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()

@@ -166,3 +166,23 @@ class IA3ForAttn(nn.Module):
         self.peft_l_v = nn.Parameter(torch.ones(config.dim, dtype=peft_config.peft_dtype))
 
     def forward(self, key_states, value_states):
+        return (
+            (key_states.to(self.peft_config.peft_dtype) * self.peft_l_k).to(self.config.dtype),
+            (value_states.to(self.peft_config.peft_dtype) * self.peft_l_v).to(self.config.dtype),
+        )
+
+
+class IA3ForMLP(nn.Module):
+    def __init__(self, config: LLaMAConfig, peft_config: PeftConfig):
+        super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+        multiple_of = 256
+        intermediate_dim = 4 * config.dim
+        intermediate_dim = int(2 * intermediate_dim / 3)
+        intermediate_dim = multiple_of * ((intermediate_dim + multiple_of - 1) // multiple_of)
+
+        self.peft_l_ffn = nn.Parameter(torch.ones(1, 1, intermediate_dim, dtype=peft_config.peft_dtype))
+
+    def forward(self, intermediate_state):
+        return (intermediate_state.to(self.peft_config.peft_dtype) * self.peft_l_ffn).to(self.config.dtype)

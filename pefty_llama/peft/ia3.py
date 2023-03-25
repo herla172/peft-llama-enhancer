@@ -143,3 +143,26 @@ class IA3(nn.Module):
         # cleanup memory freed by deleting the old layers
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        gc.collect()
+
+        for name, param in self.base_model.named_parameters():
+            if "peft_" in name: continue
+            param.requires_grad = False
+
+        # monkey patch the methods
+        self.forward = self.base_model.forward
+        self.generate = self.base_model.generate
+
+
+class IA3ForAttn(nn.Module):
+    def __init__(self, config: LLaMAConfig, peft_config: PeftConfig):
+        super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+        self.n_heads = config.n_heads
+        self.head_dim = config.dim // config.n_heads
+
+        self.peft_l_k = nn.Parameter(torch.ones(config.dim, dtype=peft_config.peft_dtype))
+        self.peft_l_v = nn.Parameter(torch.ones(config.dim, dtype=peft_config.peft_dtype))
+
+    def forward(self, key_states, value_states):

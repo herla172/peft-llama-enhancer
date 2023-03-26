@@ -33,3 +33,15 @@ class LoRA(nn.Module):
 
 class LoRAEmbed(nn.Module):
     def __init__(self, config: LLaMAConfig, peft_config: PeftConfig):
+        super().__init__()
+        self.config = config
+        self.peft_config = peft_config
+
+        self.lora_down = nn.Parameter(torch.randn(config.vocab_size, peft_config.lora_rank, dtype=peft_config.peft_dtype))
+        self.lora_up = nn.Parameter(torch.zeros(peft_config.lora_rank, config.dim, dtype=peft_config.peft_dtype))
+        self.rank = peft_config.lora_rank
+        self.scaling = peft_config.lora_alpha / peft_config.lora_rank
+
+    def forward(self, input_ids):
+        embedding_matrix = self.lora_down @ self.lora_up
+        return F.embedding(input_ids, embedding_matrix)

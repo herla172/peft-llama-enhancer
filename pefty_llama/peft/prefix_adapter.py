@@ -5,4 +5,4 @@ from pefty_llama.configuration import LLaMAConfig
 from .configuration import PeftConfig
 
 
-class Pre
+class PrefixAdapter(nn.Module)

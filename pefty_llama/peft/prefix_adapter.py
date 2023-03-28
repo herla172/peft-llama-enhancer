@@ -6,4 +6,4 @@ from .configuration import PeftConfig
 
 
 class PrefixAdapter(nn.Module):
-    def __init__(self, c
+    def __init__(self, config: LLaMAConfig, peft_con

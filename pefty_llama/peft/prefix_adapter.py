@@ -10,4 +10,4 @@ class PrefixAdapter(nn.Module):
         super().__init__()
         self.config = config
         self.peft_config = peft_config
-        # "batch_size"=1, n
+        # "batch_size"=1, num_heads, num_prefix_toke

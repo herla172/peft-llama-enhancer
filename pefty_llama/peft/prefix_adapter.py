@@ -12,4 +12,5 @@ class PrefixAdapter(nn.Module):
         self.peft_config = peft_config
         # "batch_size"=1, num_heads, num_prefix_tokens, head_dim
         self.prefix_k = nn.Parameter(torch.randn(
-            1, config.n_heads, peft_config.num_prefix_tokens, config.head_dim, dt
+            1, config.n_heads, peft_config.num_prefix_tokens, config.head_dim, dtype=peft_config.peft_dtype))
+ 

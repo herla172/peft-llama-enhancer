@@ -17,4 +17,4 @@ class PrefixAdapter(nn.Module):
             1, config.n_heads, peft_config.num_prefix_tokens, config.head_dim, dtype=peft_config.peft_dtype))
         self.gate = nn.Parameter(torch.zeros(1, config.n_heads, 1, 1))
 
- 
+    def forward(self, que

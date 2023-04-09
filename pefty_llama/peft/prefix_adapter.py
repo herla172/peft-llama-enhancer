@@ -20,4 +20,4 @@ class PrefixAdapter(nn.Module):
     def forward(self, query_states):
         batch_size, num_heads, q_seq_len, head_dim = query_states.shape
         # "batch_size"=1, num_heads, num_prefix_tokens, head_dim
-    
+        prefix_k = self.p

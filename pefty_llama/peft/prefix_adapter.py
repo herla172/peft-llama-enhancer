@@ -22,4 +22,4 @@ class PrefixAdapter(nn.Module):
         # "batch_size"=1, num_heads, num_prefix_tokens, head_dim
         prefix_k = self.prefix_k.expand(batch_size, -1, -1, -1)
         prefix_v = self.prefix_v.expand(batch_size, -1, -1, -1)
-        attn_output
+        attn_output = torch.nn.functiona

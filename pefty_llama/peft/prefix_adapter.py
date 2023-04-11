@@ -23,4 +23,4 @@ class PrefixAdapter(nn.Module):
         prefix_k = self.prefix_k.expand(batch_size, -1, -1, -1)
         prefix_v = self.prefix_v.expand(batch_size, -1, -1, -1)
         attn_output = torch.nn.functional.scaled_dot_product_attention(
-            quer
+            query=query_states.to(self.pef

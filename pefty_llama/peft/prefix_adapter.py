@@ -27,4 +27,4 @@ class PrefixAdapter(nn.Module):
             key=prefix_k,
             value=prefix_v,
         )
-        return (F.tanh(sel
+        return (F.tanh(self.gate) * attn_outpu

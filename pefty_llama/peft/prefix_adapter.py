@@ -24,4 +24,5 @@ class PrefixAdapter(nn.Module):
         prefix_v = self.prefix_v.expand(batch_size, -1, -1, -1)
         attn_output = torch.nn.functional.scaled_dot_product_attention(
             query=query_states.to(self.peft_config.peft_dtype),
-            key=prefix_
+            key=prefix_k,
+            value=p

@@ -19,3 +19,21 @@ class SoftPrefixes(nn.Module):
             self.initial = nn.Parameter(
                 torch.randn(peft_config.num_prefix_tokens, config.dim, dtype=peft_config.peft_dtype)
             )
+            self.mlp = torch.nn.Sequential(
+                torch.nn.Linear(config.dim, intermediate_size, dtype=peft_config.peft_dtype),
+                torch.nn.Tanh(),
+                torch.nn.Linear(intermediate_size, config.n_layers * 2 * config.dim, dtype=peft_config.peft_dtype),
+            )
+        else:
+            self.soft_prompt = nn.Parameter(torch.randn(
+                peft_config.num_prefix_tokens, config.n_layers * 2 * config.dim,
+                dtype=peft_config.peft_dtype
+            ))
+
+    def forward(self, batch_size):
+        if self.peft_config.prefix_use_mlp:
+            out = self.mlp(self.initial)
+        else:
+            out = self.embedding
+        # layers, k/v, num_prefix_tokens, num_heads, head_dim
+        out = out.view(self.peft_config.num_prefix_tokens, self.config.n_layers, 2,

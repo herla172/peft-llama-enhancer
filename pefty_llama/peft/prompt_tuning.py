@@ -1,3 +1,4 @@
 import torch
 import torch.nn as nn
-from pefty_llama.configuration imp
+from pefty_llama.configuration import LLaMAConfig
+from .conf

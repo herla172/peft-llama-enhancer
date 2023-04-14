@@ -4,4 +4,5 @@ from pefty_llama.configuration import LLaMAConfig
 from .configuration import PeftConfig
 
 
-class AddSoftPrompt(nn.Modul
+class AddSoftPrompt(nn.Module):
+    def __init__(

@@ -37,3 +37,11 @@ class SoftPrefixes(nn.Module):
             out = self.embedding
         # layers, k/v, num_prefix_tokens, num_heads, head_dim
         out = out.view(self.peft_config.num_prefix_tokens, self.config.n_layers, 2,
+                       self.config.n_heads, self.config.head_dim).to(self.config.dtype)
+        return [
+            {
+                "key": out[:, layer, 0, :, :].permute(1, 0, 2).unsqueeze(0).expand(batch_size, -1, -1, -1),
+                "value": out[:, layer, 1, :, :].permute(1, 0, 2).unsqueeze(0).expand(batch_size, -1, -1, -1),
+            }
+            for layer in range(self.config.n_layers)
+        ]

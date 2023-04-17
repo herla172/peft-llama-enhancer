@@ -6,4 +6,5 @@ from .configuration import PeftConfig
 
 class AddSoftPrompt(nn.Module):
     def __init__(self, config: LLaMAConfig, peft_config: PeftConfig):
-        super()._
+        super().__init__()
+        self.

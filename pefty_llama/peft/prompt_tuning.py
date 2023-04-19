@@ -9,4 +9,4 @@ class AddSoftPrompt(nn.Module):
         super().__init__()
         self.peft_config = peft_config
         self.soft_prompt = nn.Parameter(
-           
+            torch.randn(peft

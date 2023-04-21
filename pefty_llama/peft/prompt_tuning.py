@@ -12,4 +12,4 @@ class AddSoftPrompt(nn.Module):
             torch.randn(peft_config.num_prefix_tokens, config.dim, dtype=peft_config.peft_dtype)
         )
 
-   
+    def forward(self, h

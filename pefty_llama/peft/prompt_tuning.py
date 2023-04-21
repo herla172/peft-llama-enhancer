@@ -14,4 +14,4 @@ class AddSoftPrompt(nn.Module):
 
     def forward(self, hidden_states):
         batch_size, seq_len, dim = hidden_states.shape
-        soft_
+        soft_prompt = self.soft_prom

@@ -1,3 +1,3 @@
 import setuptools
 
-with open(
+with open("README.md", "r") as 

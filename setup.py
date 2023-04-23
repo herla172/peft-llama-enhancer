@@ -1,1 +1,3 @@
-impo
+import setuptools
+
+with open(

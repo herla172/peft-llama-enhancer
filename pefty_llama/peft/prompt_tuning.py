@@ -15,4 +15,4 @@ class AddSoftPrompt(nn.Module):
     def forward(self, hidden_states):
         batch_size, seq_len, dim = hidden_states.shape
         soft_prompt = self.soft_prompt.unsqueeze(0).expand(batch_size, -1, -1).to(self.config.dtype)
-        return torch.cat([sof
+        return torch.cat([soft_prompt, hidden_states]

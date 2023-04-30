@@ -7,4 +7,5 @@ with open("requirements.txt", "r") as f:
     requires = f.read().splitlines()
 
 setuptools.setup(
-    name="pefty_ll
+    name="pefty_llama",
+    version="0.0.1

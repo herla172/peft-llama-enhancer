@@ -6,4 +6,5 @@ with open("README.md", "r") as f:
 with open("requirements.txt", "r") as f:
     requires = f.read().splitlines()
 
-setuptools.set
+setuptools.setup(
+    name="pefty_ll

@@ -11,3 +11,4 @@ setuptools.setup(
     version="0.0.1",
     author="Vlad Lialin",
     author_email="vlad.lialin@gmail.com",
+    description="Minimal imp

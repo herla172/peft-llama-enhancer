@@ -9,4 +9,5 @@ with open("requirements.txt", "r") as f:
 setuptools.setup(
     name="pefty_llama",
     version="0.0.1",
-    author="Vlad Lialin"
+    author="Vlad Lialin",
+    author_email="vlad

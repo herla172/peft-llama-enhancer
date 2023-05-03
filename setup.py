@@ -12,4 +12,4 @@ setuptools.setup(
     author="Vlad Lialin",
     author_email="vlad.lialin@gmail.com",
     description="Minimal implementations of multiple PEFT methods for LLaMA fine-tuning",
-    url="http
+    url="https://github.com/Guitaricet/my_

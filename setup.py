@@ -14,4 +14,5 @@ setuptools.setup(
     description="Minimal implementations of multiple PEFT methods for LLaMA fine-tuning",
     url="https://github.com/Guitaricet/my_pefty_llama",
     packages=setuptools.find_packages(),
-    requires=requires
+    requires=requires,
+)

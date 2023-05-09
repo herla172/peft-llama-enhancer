@@ -5,4 +5,7 @@ import os
 import tqdm.auto as tqdm
 
 import datasets
-import trans
+import transformers
+
+
+def read

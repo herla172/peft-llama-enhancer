@@ -12,4 +12,7 @@ def read_jsonl(path):
     # Manually open because .splitlines is different from iterating over lines
     with open(path, "r") as f:
         for line in f:
-         
+            yield json.loads(line)
+
+
+d

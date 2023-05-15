@@ -15,4 +15,4 @@ def read_jsonl(path):
             yield json.loads(line)
 
 
-d
+def read_lm_dataformat(path)

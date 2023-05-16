@@ -15,4 +15,5 @@ def read_jsonl(path):
             yield json.loads(line)
 
 
-def read_lm_dataformat(path)
+def read_lm_dataformat(path):
+    import lm_datafo

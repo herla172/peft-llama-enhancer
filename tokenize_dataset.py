@@ -17,4 +17,5 @@ def read_jsonl(path):
 
 def read_lm_dataformat(path):
     import lm_dataformat
-    reader = lm_datafo
+    reader = lm_dataformat.Reader(path)
+   

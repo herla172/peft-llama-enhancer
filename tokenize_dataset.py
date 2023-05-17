@@ -18,4 +18,8 @@ def read_jsonl(path):
 def read_lm_dataformat(path):
     import lm_dataformat
     reader = lm_dataformat.Reader(path)
-    yield from reader.stream_d
+    yield from reader.stream_data()
+
+
+def main():
+    

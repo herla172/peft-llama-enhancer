@@ -22,4 +22,5 @@ def read_lm_dataformat(path):
 
 
 def main():
-    parser = argparse.ArgumentPars
+    parser = argparse.ArgumentParser()
+    parser.add_argument

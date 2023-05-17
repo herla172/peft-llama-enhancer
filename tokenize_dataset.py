@@ -23,4 +23,5 @@ def read_lm_dataformat(path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--tokenizer_path"
+    parser.add_argument("--tokenizer_path", type=str)
+    parse

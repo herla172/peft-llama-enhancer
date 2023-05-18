@@ -25,4 +25,4 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--tokenizer_path", type=str)
     parser.add_argument("--data_path", type=str)
-    parser.a
+    parser.add_argument("--data_forma

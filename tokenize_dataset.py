@@ -25,4 +25,5 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--tokenizer_path", type=str)
     parser.add_argument("--data_path", type=str)
-    parser.add_argument("--data_format", type=str, default="json
+    parser.add_argument("--data_format", type=str, default="jsonl")
+    parser.add_argument("

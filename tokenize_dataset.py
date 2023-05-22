@@ -27,4 +27,4 @@ def main():
     parser.add_argument("--data_path", type=str)
     parser.add_argument("--data_format", type=str, default="jsonl")
     parser.add_argument("--save_path", type=str)
-    parser.add_argument("
+    parser.add_argument("--max_seq_length", type

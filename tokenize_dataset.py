@@ -31,3 +31,5 @@ def main():
     parser.add_argument("--shard_size", type=int, default=100000)
     args = parser.parse_args()
     os.makedirs(args.save_path, exist_ok=True)
+
+    tokenizer =

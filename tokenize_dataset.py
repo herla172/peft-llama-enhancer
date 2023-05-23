@@ -28,4 +28,4 @@ def main():
     parser.add_argument("--data_format", type=str, default="jsonl")
     parser.add_argument("--save_path", type=str)
     parser.add_argument("--max_seq_length", type=int, default=2048)
-    parser.add_argument("--shard_size", type=int,
+    parser.add_argument("--shard_size", type=int, default=100000)

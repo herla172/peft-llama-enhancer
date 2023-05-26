@@ -32,4 +32,4 @@ def main():
     args = parser.parse_args()
     os.makedirs(args.save_path, exist_ok=True)
 
-    tokenizer = transformers.LlamaTokenizer.from_pretraine
+    tokenizer = transformers.LlamaTokenizer.from_pretrained(args.tokenizer_pa

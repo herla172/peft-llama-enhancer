@@ -34,4 +34,5 @@ def main():
 
     tokenizer = transformers.LlamaTokenizer.from_pretrained(args.tokenizer_path)
 
-    all_tok
+    all_tokenized = []
+    if 

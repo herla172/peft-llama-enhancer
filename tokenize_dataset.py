@@ -35,4 +35,4 @@ def main():
     tokenizer = transformers.LlamaTokenizer.from_pretrained(args.tokenizer_path)
 
     all_tokenized = []
-    if 
+    if args.data_format == "j

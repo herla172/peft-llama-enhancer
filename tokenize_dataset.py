@@ -36,4 +36,4 @@ def main():
 
     all_tokenized = []
     if args.data_format == "jsonl":
-        r
+        reader = read_jsonl(a

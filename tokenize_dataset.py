@@ -35,4 +35,5 @@ def main():
     tokenizer = transformers.LlamaTokenizer.from_pretrained(args.tokenizer_path)
 
     all_tokenized = []
-    if args.data_format == "j
+    if args.data_format == "jsonl":
+        r

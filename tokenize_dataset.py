@@ -43,4 +43,5 @@ def main():
         raise KeyError(args.data_format)
 
     total = 0
-    shards =
+    shards = 0
+    for elem in tqdm.tqdm(rea

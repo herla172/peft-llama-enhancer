@@ -42,4 +42,5 @@ def main():
     else:
         raise KeyError(args.data_format)
 
-  
+    total = 0
+    shards =

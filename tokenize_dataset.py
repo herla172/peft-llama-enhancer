@@ -45,4 +45,4 @@ def main():
     total = 0
     shards = 0
     for elem in tqdm.tqdm(reader):
-        text =
+        text = elem["text"] if args.data_format 

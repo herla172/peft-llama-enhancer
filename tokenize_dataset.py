@@ -38,4 +38,5 @@ def main():
     if args.data_format == "jsonl":
         reader = read_jsonl(args.data_path)
     elif args.data_format == "lm_dataformat":
-        reader = read_lm_dataformat(a
+        reader = read_lm_dataformat(args.data_path)
+    else:

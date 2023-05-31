@@ -37,4 +37,5 @@ def main():
     all_tokenized = []
     if args.data_format == "jsonl":
         reader = read_jsonl(args.data_path)
-    elif args.data_format == "
+    elif args.data_format == "lm_dataformat":
+        read

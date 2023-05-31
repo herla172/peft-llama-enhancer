@@ -44,4 +44,5 @@ def main():
 
     total = 0
     shards = 0
-    for elem in tqdm.tqdm(rea
+    for elem in tqdm.tqdm(reader):
+        text =

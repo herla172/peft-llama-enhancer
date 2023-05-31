@@ -40,3 +40,4 @@ def main():
     elif args.data_format == "lm_dataformat":
         reader = read_lm_dataformat(args.data_path)
     else:
+        raise KeyError(a

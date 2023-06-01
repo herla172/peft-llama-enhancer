@@ -45,4 +45,5 @@ def main():
     total = 0
     shards = 0
     for elem in tqdm.tqdm(reader):
-        text = elem["text"] if args.data_format 
+        text = elem["text"] if args.data_format == "jsonl" else elem
+     

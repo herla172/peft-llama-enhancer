@@ -46,4 +46,4 @@ def main():
     shards = 0
     for elem in tqdm.tqdm(reader):
         text = elem["text"] if args.data_format == "jsonl" else elem
-     
+        tokenized = tokenize

@@ -47,4 +47,4 @@ def main():
     for elem in tqdm.tqdm(reader):
         text = elem["text"] if args.data_format == "jsonl" else elem
         tokenized = tokenizer.encode(text)
-        num_c
+        num_chunks = len(tokenized) // ar

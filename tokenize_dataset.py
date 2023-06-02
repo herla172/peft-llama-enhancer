@@ -48,4 +48,5 @@ def main():
         text = elem["text"] if args.data_format == "jsonl" else elem
         tokenized = tokenizer.encode(text)
         num_chunks = len(tokenized) // args.max_seq_length
-        for j in range(num_chun
+        for j in range(num_chunks):
+            chunk 

@@ -54,4 +54,5 @@ def main():
             ]
             all_tokenized.append(chunk)
             total += 1
-            if len(all_tokenized) == args.shard_
+            if len(all_tokenized) == args.shard_size:
+                ds

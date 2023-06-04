@@ -52,4 +52,4 @@ def main():
             chunk = tokenized[
                 j * args.max_seq_length: (j + 1) * args.max_seq_length
             ]
-  
+            all_tokenized.append(

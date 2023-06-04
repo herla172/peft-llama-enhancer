@@ -50,4 +50,6 @@ def main():
         num_chunks = len(tokenized) // args.max_seq_length
         for j in range(num_chunks):
             chunk = tokenized[
-                j * args.max_seq_length: (j + 1) * args.max_se
+                j * args.max_seq_length: (j + 1) * args.max_seq_length
+            ]
+  

@@ -53,4 +53,5 @@ def main():
                 j * args.max_seq_length: (j + 1) * args.max_seq_length
             ]
             all_tokenized.append(chunk)
-            total
+            total += 1
+            if len(al

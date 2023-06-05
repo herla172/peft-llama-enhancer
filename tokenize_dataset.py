@@ -55,4 +55,5 @@ def main():
             all_tokenized.append(chunk)
             total += 1
             if len(all_tokenized) == args.shard_size:
-                ds = datasets.Dataset.from_dict({"input_ids": 
+                ds = datasets.Dataset.from_dict({"input_ids": all_tokenized})
+           

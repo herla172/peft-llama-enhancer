@@ -56,4 +56,4 @@ def main():
             total += 1
             if len(all_tokenized) == args.shard_size:
                 ds = datasets.Dataset.from_dict({"input_ids": all_tokenized})
-           
+                ds.save_to_disk(os.p

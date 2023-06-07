@@ -60,4 +60,5 @@ def main():
                 all_tokenized = []
                 shards += 1
 
-    if len(all_tok
+    if len(all_tokenized) > 0:
+      

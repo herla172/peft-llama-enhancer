@@ -61,4 +61,5 @@ def main():
                 shards += 1
 
     if len(all_tokenized) > 0:
-        ds = datasets.Dataset.from_dict({"input_ids": all_to
+        ds = datasets.Dataset.from_dict({"input_ids": all_tokenized})
+        ds.save_to

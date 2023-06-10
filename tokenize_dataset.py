@@ -62,4 +62,6 @@ def main():
 
     if len(all_tokenized) > 0:
         ds = datasets.Dataset.from_dict({"input_ids": all_tokenized})
-        ds.save_to_disk(os.path.join(args.save_path, "shard_{:05d}".format(shards
+        ds.save_to_disk(os.path.join(args.save_path, "shard_{:05d}".format(shards)))
+
+    print(f"Generated

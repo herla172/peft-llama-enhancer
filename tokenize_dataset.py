@@ -66,3 +66,5 @@ def main():
 
     print(f"Generated {total} samples in {shards} shards.")
 
+
+if __name__ == "__main

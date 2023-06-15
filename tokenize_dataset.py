@@ -64,4 +64,4 @@ def main():
         ds = datasets.Dataset.from_dict({"input_ids": all_tokenized})
         ds.save_to_disk(os.path.join(args.save_path, "shard_{:05d}".format(shards)))
 
-    print(f"Generated
+    print(f"Generated {total} samples
